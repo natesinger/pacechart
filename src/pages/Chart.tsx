@@ -75,13 +75,13 @@ const uniqueSorted = (v: number[]) =>
 /* race‑distance maps */
 const RACE_LABELS: Record<number, string> = {
   0.062: "100m", 0.124: "200m", 0.249: "400m", 0.497: "800m", 0.621: "1K",
-  0.932: "1.5K", 1.5: "1.5 Mile", 3.107: "5K", 6.214: "10K",
-  13.109: "½ M", 26.219: "Marathon",
+  0.932: "1.5K", 1.5: "1.5 mi", 3.107: "5K", 6.214: "10K",
+  13.109: "½ M", 26.219: "Marathon",
 };
 const RACE_LABELS_KM: Record<number, string> = {
   0.1: "100m", 0.2: "200m", 0.4: "400m", 0.8: "800m", 1.0: "1K",
-  1.5: "1.5K", 2.414: "1.5 Mile", 5.0: "5K", 10.0: "10K",
-  21.097: "½ M", 42.195: "Marathon",
+  1.5: "1.5K", 2.414: "1.5 mi", 5.0: "5K", 10.0: "10K",
+  21.097: "½ M", 42.195: "Marathon",
 };
 function generateDistances(unit: "km" | "mi"): number[] {
   if (unit === "mi") {
@@ -99,7 +99,7 @@ function generateDistances(unit: "km" | "mi"): number[] {
   return uniqueSorted([...track, ...std, ...km]);
 }
 
-/*──────── defaults (5 km @ 10 min/mi) ────────*/
+/*──────── defaults (5 km @ 10 min/mi) ────────*/
 const DEFAULT_SETTINGS: Settings = { unit: "mi", paceStep: 10 };
 const DEFAULT_HL: Highlight = (() => {
   const dists = generateDistances(DEFAULT_SETTINGS.unit);
@@ -139,7 +139,7 @@ export default function PaceChart() {
       headerRef.current.scrollLeft = bodyRef.current.scrollLeft;
   };
 
-  /*──────── desktop drag‑scroll w/ 2 px threshold ────────*/
+  /*──────── desktop drag‑scroll w/ 2 px threshold ────────*/
   const dragId   = useRef<number | null>(null);
   const start    = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
   const movedYet = useRef(false);
@@ -222,7 +222,7 @@ export default function PaceChart() {
     setHL(p => (p.r === r && p.c === c ? { r: null, c: null } : { r, c }));
   const clearHL = () => setHL({ r: 0, c: 0 });
 
-  /*──────── mobile double‑tap ────────*/
+  /*──────── mobile double‑tap (stop propagation) ────────*/
   const DOUBLE_TAP_MS = 400;
   const lastTap = useRef(0);
   const touchHandler =
@@ -231,6 +231,7 @@ export default function PaceChart() {
       const now = Date.now();
       if (now - lastTap.current < DOUBLE_TAP_MS) {
         e.preventDefault();
+        e.stopPropagation();          // ← key fix: swallow the event
         fn(...args);
       }
       lastTap.current = now;
@@ -380,10 +381,10 @@ export default function PaceChart() {
                 }
                 className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1"
               >
-                <option value={10}>10 s</option>
-                <option value={15}>15 s</option>
-                <option value={30}>30 s</option>
-                <option value={60}>60 s</option>
+                <option value={10}>10 s</option>
+                <option value={15}>15 s</option>
+                <option value={30}>30 s</option>
+                <option value={60}>60 s</option>
               </select>
             </label>
             <div className="flex justify-end gap-4">
