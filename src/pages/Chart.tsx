@@ -50,10 +50,10 @@ function save(key: string, value: unknown) {
 }
 
 /*──────────────────────────────── types ──────────────────────────────────*/
-type Settings = { unit: "km" | "mi"; paceStep: 10 | 15 | 30 | 60 };
+type Settings  = { unit: "km" | "mi"; paceStep: 10 | 15 | 30 | 60 };
 type Highlight = { r: number; c: number };
 
-/*──────────────────────── utility fns ─────────────────────────*/
+/*────────────────────── utility fns ─────────────────────*/
 const fmt = (m: number) => {
   const h  = Math.floor(m / 60);
   const mm = String(Math.floor(m % 60)).padStart(2, "0");
@@ -99,19 +99,19 @@ function generateDistances(unit: "km" | "mi"): number[] {
   return uniqueSorted([...track, ...std, ...km]);
 }
 
-/*──────────────────────── defaults (5 km @ 10 min/mi) ─────────────────────*/
+/*──────── defaults (5 km @ 10 min/mi) ────────*/
 const DEFAULT_SETTINGS: Settings = { unit: "mi", paceStep: 10 };
 const DEFAULT_HL: Highlight = (() => {
   const dists = generateDistances(DEFAULT_SETTINGS.unit);
   const paces = generatePaces(DEFAULT_SETTINGS.paceStep, DEFAULT_SETTINGS.unit);
-  const col = dists.findIndex(d => Math.abs(d - 3.107) < 0.01); // 5 km in mi
-  const row = paces.findIndex(p => Math.abs(p - 10) < 1e-6);    // 10 min/mi
+  const col = dists.findIndex(d => Math.abs(d - 3.107) < 0.01);
+  const row = paces.findIndex(p => Math.abs(p - 10) < 1e-6);
   return { r: row >= 0 ? row : 0, c: col >= 0 ? col : 0 };
 })();
 
-/*────────────────────────────── component ───────────────────────────────*/
+/*──────────────────────────── component ────────────────────────────*/
 export default function PaceChart() {
-  /*──────── state ────────*/
+  /* state */
   const [settings, setSettings] = useState<Settings>(() =>
     load(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS)
   );
@@ -120,18 +120,18 @@ export default function PaceChart() {
   );
   const [open, setOpen] = useState(false);
 
-  /*──────── derived data ────────*/
+  /* derived data */
   const dists = useMemo(() => generateDistances(settings.unit), [settings.unit]);
   const paces = useMemo(
     () => generatePaces(settings.paceStep, settings.unit),
     [settings.paceStep, settings.unit]
   );
 
-  /*──────── persist on change ────────*/
+  /* persistence */
   useEffect(() => save(STORAGE_KEYS.SETTINGS, settings), [settings]);
   useEffect(() => save(STORAGE_KEYS.HIGHLIGHT, hl), [hl]);
 
-  /*──────── scrolling refs ────────*/
+  /* refs */
   const bodyRef   = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const sync = () => {
@@ -139,44 +139,49 @@ export default function PaceChart() {
       headerRef.current.scrollLeft = bodyRef.current.scrollLeft;
   };
 
-  /*──────── mouse drag‑scroll logic (unchanged) ────────*/
-  const dragging = useRef(false);
-  const moved    = useRef(false);
-  const start    = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
+  /*──────── desktop drag‑scroll w/ 2 px threshold ────────*/
   const dragId   = useRef<number | null>(null);
+  const start    = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
+  const movedYet = useRef(false);
+
   const down = (e: React.PointerEvent) => {
-    if (e.button || e.pointerType !== "mouse") return;
+    if (e.pointerType !== "mouse" || e.button) return;
     if ((e.target as HTMLElement).closest("button")) return;
-    dragging.current = true;
-    moved.current = false;
+
     dragId.current = e.pointerId;
+    movedYet.current = false;
     start.current = {
-      x: e.clientX, y: e.clientY,
-      sx: bodyRef.current!.scrollLeft, sy: bodyRef.current!.scrollTop,
+      x : e.clientX,
+      y : e.clientY,
+      sx: bodyRef.current!.scrollLeft,
+      sy: bodyRef.current!.scrollTop,
     };
   };
+
   const move = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse" || !dragging.current) return;
+    if (e.pointerId !== dragId.current) return;
+
     const dx = e.clientX - start.current.x;
     const dy = e.clientY - start.current.y;
-    if (!moved.current && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-      moved.current = true;
+
+    if (!movedYet.current && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+      movedYet.current = true;
+      bodyRef.current?.setPointerCapture(dragId.current);
       bodyRef.current?.classList.add("cursor-grabbing");
-      bodyRef.current?.setPointerCapture(dragId.current!);
-      e.preventDefault();
     }
-    if (moved.current) {
+    if (movedYet.current) {
       bodyRef.current!.scrollLeft = start.current.sx - dx;
       bodyRef.current!.scrollTop  = start.current.sy - dy;
       sync();
     }
   };
+
   const up = () => {
-    if (dragId.current && bodyRef.current?.hasPointerCapture(dragId.current))
-      bodyRef.current.releasePointerCapture(dragId.current);
-    dragging.current = false;
-    moved.current = false;
+    if (movedYet.current && dragId.current !== null) {
+      bodyRef.current?.releasePointerCapture(dragId.current);
+    }
     dragId.current = null;
+    movedYet.current = false;
     bodyRef.current?.classList.remove("cursor-grabbing");
   };
 
@@ -190,7 +195,7 @@ export default function PaceChart() {
     const col = hl.c ?? 0;
     const row = hl.r ?? 0;
 
-    const cellCenterX = (col + 1.5) * CELL_WIDTH; // +1 for sticky col
+    const cellCenterX = (col + 1.5) * CELL_WIDTH;
     const cellCenterY = (row + 0.5) * CELL_HEIGHT;
 
     const desiredLeft = Math.max(
@@ -208,7 +213,7 @@ export default function PaceChart() {
       headerRef.current && (headerRef.current.scrollLeft = desiredLeft);
       didInitialScroll.current = true;
     });
-  }, [dists.length, paces.length]); // no hl dependency
+  }, [dists.length, paces.length]);
 
   /*──────── highlight helpers ────────*/
   const toggleCol  = (c: number) => setHL(p => ({ r: p.r,       c: p.c === c ? null : c }));
@@ -217,13 +222,14 @@ export default function PaceChart() {
     setHL(p => (p.r === r && p.c === c ? { r: null, c: null } : { r, c }));
   const clearHL = () => setHL({ r: 0, c: 0 });
 
-  /*──────── mobile double‑tap helper ────────*/
+  /*──────── mobile double‑tap ────────*/
+  const DOUBLE_TAP_MS = 400;
   const lastTap = useRef(0);
   const touchHandler =
     <A extends unknown[]>(fn: (...a: A) => void, ...args: A) =>
     (e: React.TouchEvent) => {
       const now = Date.now();
-      if (now - lastTap.current < 300) {
+      if (now - lastTap.current < DOUBLE_TAP_MS) {
         e.preventDefault();
         fn(...args);
       }
@@ -245,7 +251,7 @@ export default function PaceChart() {
   };
   const cx = (...c: (string | boolean | undefined)[]) => c.filter(Boolean).join(" ");
 
-  /*──────────────────────── render – unchanged below this line ────────────*/
+  /*───────────────────────── render ─────────────────────────*/
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden text-zinc-100 bg-zinc-900">
       {/* header */}
@@ -275,11 +281,8 @@ export default function PaceChart() {
                 <th
                   key={i}
                   style={cellStyle}
-                  onDoubleClick={e => {
-                    e.stopPropagation();
-                    toggleCol(i);
-                  }}
-                  onTouchEnd={touchHandler(toggleCol, i)}
+                  onDoubleClick={e => { e.stopPropagation(); toggleCol(i); }}
+                  onTouchStart={touchHandler(toggleCol, i)}
                   className={cx(
                     hl.c === i ? HIGHLIGHT_LIGHT : "bg-zinc-800",
                     "box-border border border-zinc-700 cursor-pointer select-none text-sm",
@@ -312,11 +315,8 @@ export default function PaceChart() {
               <tr key={r}>
                 <th
                   style={cellStyle}
-                  onDoubleClick={e => {
-                    e.stopPropagation();
-                    toggleRow(r);
-                  }}
-                  onTouchEnd={touchHandler(toggleRow, r)}
+                  onDoubleClick={e => { e.stopPropagation(); toggleRow(r); }}
+                  onTouchStart={touchHandler(toggleRow, r)}
                   className={cx(
                     "box-border border border-zinc-700 sticky left-0 z-10 cursor-pointer text-xs",
                     hl.r === r ? HIGHLIGHT_LIGHT : "bg-zinc-800",
@@ -332,11 +332,8 @@ export default function PaceChart() {
                     <td
                       key={c}
                       style={cellStyle}
-                      onDoubleClick={e => {
-                        e.stopPropagation();
-                        toggleCell(r, c);
-                      }}
-                      onTouchEnd={touchHandler(toggleCell, r, c)}
+                      onDoubleClick={e => { e.stopPropagation(); toggleCell(r, c); }}
+                      onTouchStart={touchHandler(toggleCell, r, c)}
                       className={cx(
                         "box-border border border-zinc-700 text-center text-xs font-light text-zinc-300 cursor-pointer",
                         both ? HIGHLIGHT_DEEP : rowOrCol && HIGHLIGHT,
@@ -353,7 +350,7 @@ export default function PaceChart() {
         </table>
       </div>
 
-      {/* settings modal (unchanged) */}
+      {/* settings modal */}
       {open && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-zinc-800 p-6 rounded-lg w-80 shadow-lg">
