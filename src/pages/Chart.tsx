@@ -72,16 +72,16 @@ function generatePaces(stepSec: number, unit: "km" | "mi"): number[] {
 const uniqueSorted = (v: number[]) =>
   Array.from(new Set(v.map(x => +x.toFixed(3)))).sort((a, b) => a - b);
 
-/* race‑distance maps */
+/* race‑distance maps – unchanged */
 const RACE_LABELS: Record<number, string> = {
   0.062: "100m", 0.124: "200m", 0.249: "400m", 0.497: "800m", 0.621: "1K",
-  0.932: "1.5K", 1.5: "1.5 mi", 3.107: "5K", 6.214: "10K",
-  13.109: "½ M", 26.219: "Marathon",
+  0.932: "1.5K", 1.5: "1.5 Mile", 3.107: "5K", 6.214: "10K",
+  13.109: "½ M", 26.219: "Marathon",
 };
 const RACE_LABELS_KM: Record<number, string> = {
   0.1: "100m", 0.2: "200m", 0.4: "400m", 0.8: "800m", 1.0: "1K",
-  1.5: "1.5K", 2.414: "1.5 mi", 5.0: "5K", 10.0: "10K",
-  21.097: "½ M", 42.195: "Marathon",
+  1.5: "1.5K", 2.414: "1.5 Mile", 5.0: "5K", 10.0: "10K",
+  21.097: "½ M", 42.195: "Marathon",
 };
 function generateDistances(unit: "km" | "mi"): number[] {
   if (unit === "mi") {
@@ -99,7 +99,7 @@ function generateDistances(unit: "km" | "mi"): number[] {
   return uniqueSorted([...track, ...std, ...km]);
 }
 
-/*──────── defaults (5 km @ 10 min/mi) ────────*/
+/*──────── defaults (5 km @ 10 min/mi) ────────*/
 const DEFAULT_SETTINGS: Settings = { unit: "mi", paceStep: 10 };
 const DEFAULT_HL: Highlight = (() => {
   const dists = generateDistances(DEFAULT_SETTINGS.unit);
@@ -139,17 +139,17 @@ export default function PaceChart() {
       headerRef.current.scrollLeft = bodyRef.current.scrollLeft;
   };
 
-  /*──────── desktop drag‑scroll w/ 2 px threshold ────────*/
+  /*──────── desktop drag – start scrolling on first pixel ────────*/
   const dragId   = useRef<number | null>(null);
   const start    = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
-  const movedYet = useRef(false);
+  const hasMoved = useRef(false);
 
   const down = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse" || e.button) return;
     if ((e.target as HTMLElement).closest("button")) return;
 
     dragId.current = e.pointerId;
-    movedYet.current = false;
+    hasMoved.current = false;
     start.current = {
       x : e.clientX,
       y : e.clientY,
@@ -164,28 +164,24 @@ export default function PaceChart() {
     const dx = e.clientX - start.current.x;
     const dy = e.clientY - start.current.y;
 
-    if (!movedYet.current && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
-      movedYet.current = true;
+    if (!hasMoved.current) {
+      hasMoved.current = true;
       bodyRef.current?.setPointerCapture(dragId.current);
       bodyRef.current?.classList.add("cursor-grabbing");
     }
-    if (movedYet.current) {
-      bodyRef.current!.scrollLeft = start.current.sx - dx;
-      bodyRef.current!.scrollTop  = start.current.sy - dy;
-      sync();
-    }
+    bodyRef.current!.scrollLeft = start.current.sx - dx;
+    bodyRef.current!.scrollTop  = start.current.sy - dy;
+    sync();
   };
 
   const up = () => {
-    if (movedYet.current && dragId.current !== null) {
-      bodyRef.current?.releasePointerCapture(dragId.current);
-    }
+    if (dragId.current !== null) bodyRef.current?.releasePointerCapture(dragId.current);
     dragId.current = null;
-    movedYet.current = false;
+    hasMoved.current = false;
     bodyRef.current?.classList.remove("cursor-grabbing");
   };
 
-  /*──────── one‑time auto‑centre ────────*/
+  /*──────── auto‑centre once ────────*/
   const didInitialScroll = useRef(false);
   useLayoutEffect(() => {
     if (didInitialScroll.current || !dists.length || !paces.length) return;
@@ -222,19 +218,29 @@ export default function PaceChart() {
     setHL(p => (p.r === r && p.c === c ? { r: null, c: null } : { r, c }));
   const clearHL = () => setHL({ r: 0, c: 0 });
 
-  /*──────── mobile double‑tap (stop propagation) ────────*/
+  /*──────── robust mobile double‑tap ────────*/
   const DOUBLE_TAP_MS = 400;
-  const lastTap = useRef(0);
+  const lastTouch = useRef<{ t: number; x: number; y: number } | null>(null);
+
   const touchHandler =
     <A extends unknown[]>(fn: (...a: A) => void, ...args: A) =>
     (e: React.TouchEvent) => {
+      if (e.touches.length) return;               // ignore move/second finger
+      const { clientX: x, clientY: y } = e.changedTouches[0];
       const now = Date.now();
-      if (now - lastTap.current < DOUBLE_TAP_MS) {
+
+      if (
+        lastTouch.current &&
+        now - lastTouch.current.t < DOUBLE_TAP_MS &&
+        Math.hypot(x - lastTouch.current.x, y - lastTouch.current.y) < 20
+      ) {
         e.preventDefault();
-        e.stopPropagation();          // ← key fix: swallow the event
+        e.stopPropagation();
         fn(...args);
+        lastTouch.current = null;                 // reset
+      } else {
+        lastTouch.current = { t: now, x, y };
       }
-      lastTap.current = now;
     };
 
   /*──────── label helpers ────────*/
@@ -273,7 +279,7 @@ export default function PaceChart() {
               >
                 <button
                   onClick={() => setOpen(true)}
-                  className="p-1 hover:text-blue-400"
+                  className="p-1 hover:text-blue-300"
                 >
                   <Cog6ToothIcon className="h-5 w-5 mx-auto" />
                 </button>
@@ -283,12 +289,12 @@ export default function PaceChart() {
                   key={i}
                   style={cellStyle}
                   onDoubleClick={e => { e.stopPropagation(); toggleCol(i); }}
-                  onTouchStart={touchHandler(toggleCol, i)}
+                  onTouchEnd={touchHandler(toggleCol, i)}
                   className={cx(
                     hl.c === i ? HIGHLIGHT_LIGHT : "bg-zinc-800",
                     "box-border border border-zinc-700 cursor-pointer select-none text-sm",
                     TOP_ROW_BORDER,
-                    isRaceDist(d) && "font-semibold text-blue-400"
+                    isRaceDist(d) && "font-semibold text-blue-300"
                   )}
                 >
                   {distLabel(d)}
@@ -317,7 +323,7 @@ export default function PaceChart() {
                 <th
                   style={cellStyle}
                   onDoubleClick={e => { e.stopPropagation(); toggleRow(r); }}
-                  onTouchStart={touchHandler(toggleRow, r)}
+                  onTouchEnd={touchHandler(toggleRow, r)}
                   className={cx(
                     "box-border border border-zinc-700 sticky left-0 z-10 cursor-pointer text-xs",
                     hl.r === r ? HIGHLIGHT_LIGHT : "bg-zinc-800",
@@ -334,7 +340,7 @@ export default function PaceChart() {
                       key={c}
                       style={cellStyle}
                       onDoubleClick={e => { e.stopPropagation(); toggleCell(r, c); }}
-                      onTouchStart={touchHandler(toggleCell, r, c)}
+                      onTouchEnd={touchHandler(toggleCell, r, c)}
                       className={cx(
                         "box-border border border-zinc-700 text-center text-xs font-light text-zinc-300 cursor-pointer",
                         both ? HIGHLIGHT_DEEP : rowOrCol && HIGHLIGHT,
@@ -381,10 +387,10 @@ export default function PaceChart() {
                 }
                 className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1"
               >
-                <option value={10}>10 s</option>
-                <option value={15}>15 s</option>
-                <option value={30}>30 s</option>
-                <option value={60}>60 s</option>
+                <option value={10}>10 s</option>
+                <option value={15}>15 s</option>
+                <option value={30}>30 s</option>
+                <option value={60}>60 s</option>
               </select>
             </label>
             <div className="flex justify-end gap-4">
@@ -396,7 +402,7 @@ export default function PaceChart() {
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded"
+                className="px-4 py-1 bg-blue-400 hover:bg-blue-300 text-white rounded"
               >
                 Close
               </button>
