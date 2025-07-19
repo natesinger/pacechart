@@ -1,15 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
-import { HomeIcon } from "@heroicons/react/16/solid";
 
 /*────────────────────────── configurable sizing ──────────────────────────*/
-/**
- * Set **one** width & height here and every cell (gear button, headers, sticky
- * distance column, data grid) will render exactly the same size – keeping the
- * header perfectly aligned with the scrollable body.
- */
-export const CELL_WIDTH  = 120; // pixels
+export const CELL_WIDTH  = 100; // pixels
 export const CELL_HEIGHT = 56;  // pixels
 const cellStyle = {
   width: CELL_WIDTH,
@@ -78,8 +72,8 @@ export default function PaceChart() {
   const start    = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
 
   const down = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;          // only LMB
-    e.preventDefault();                  // stop text selection
+    if (e.button !== 0) return; // only LMB
+    e.preventDefault();         // stop text selection
     dragging.current = true;
     bodyRef.current?.classList.add("cursor-grabbing");
     start.current = {
@@ -103,7 +97,11 @@ export default function PaceChart() {
     bodyRef.current?.classList.remove("cursor-grabbing");
   };
 
-  /*──── render ────*/
+  /*──── reusable cell class ────*/
+  const cellBase = "box-border border border-zinc-700";
+  const sticky   = "sticky left-0 z-10 bg-zinc-800 text-md font-semibold";
+
+  /*────────────────────────────── render ───────────────────────────────*/
   return (
     <div className="h-screen flex flex-col overflow-hidden text-zinc-100">
       {/*─── sticky header ───*/}
@@ -111,24 +109,16 @@ export default function PaceChart() {
         ref={headerRef}
         className="sticky top-0 bg-zinc-800 border-b border-zinc-700 z-30 overflow-hidden"
       >
-        <table className="table-fixed border-collapse select-none">
+        {/* border-separate eliminates the extra 1‑px shift on the sticky col */}
+        <table className="table-fixed border-separate border-spacing-0 select-none">
           <thead>
             <tr>
-              {/* gear + UNIT header */}
+              {/* gear header */}
               <th
                 style={cellStyle}
-                className="sticky left-0 z-30 bg-zinc-800 border border-zinc-700 flex flex-row items-center justify-center gap-4"
-              > 
-                <a
-                  href="/"
-                  className="block text-center text-xs text-emerald-400 hover:underline flex flex-row"
-                >
-                  <HomeIcon className="h-5 w-5 mx-auto" />
-                </a>
-                <button
-                  onClick={() => setOpen(true)}
-                  className="p-1 hover:text-emerald-400"
-                >
+                className={clsx(cellBase, sticky, "z-30")}
+              >
+                <button onClick={() => setOpen(true)} className="p-1 hover:text-emerald-400">
                   <Cog6ToothIcon className="h-5 w-5 mx-auto" />
                 </button>
               </th>
@@ -138,11 +128,12 @@ export default function PaceChart() {
                   key={i}
                   style={cellStyle}
                   className={clsx(
-                    "text-sm font-medium bg-zinc-800 border border-zinc-700",
-                    hl.c === i && "bg-emerald-800",
+                    cellBase,
+                    "text-md font-semibold bg-zinc-800",
+                    hl.c === i && "bg-emerald-900",
                   )}
                 >
-                  {p}&nbsp;min/{settings.unit}
+                  {p} m/{settings.unit}
                 </th>
               ))}
             </tr>
@@ -160,7 +151,7 @@ export default function PaceChart() {
         onPointerUp={up}
         onPointerLeave={up}
       >
-        <table className="table-fixed border-collapse w-max min-w-full select-none">
+        <table className="table-fixed border-separate border-spacing-0 w-max min-w-full select-none">
           <tbody>
             {dist.map((d, r) => (
               <tr key={r}>
@@ -168,11 +159,12 @@ export default function PaceChart() {
                 <th
                   style={cellStyle}
                   className={clsx(
-                    "sticky left-0 z-10 bg-zinc-800 border border-zinc-700 font-medium",
+                    cellBase,
+                    sticky,
                     hl.r === r && "bg-emerald-800",
                   )}
                 >
-                  {d}&nbsp;{settings.unit}
+                  {d} {settings.unit}
                 </th>
 
                 {PACE.map((t, c) => (
@@ -183,7 +175,8 @@ export default function PaceChart() {
                       setHL(hl.r === r && hl.c === c ? { r: -1, c: -1 } : { r, c })
                     }
                     className={clsx(
-                      "text-center border border-zinc-700",
+                      cellBase,
+                      "text-center text-md font-light text-zinc-300",
                       (hl.r === r || hl.c === c) && "bg-emerald-900 hover:bg-emerald-900",
                       "hover:bg-zinc-700",
                     )}
@@ -207,9 +200,7 @@ export default function PaceChart() {
               <span className="mr-2">Units:</span>
               <select
                 value={settings.unit}
-                onChange={(e) =>
-                  setSettings({ ...settings, unit: e.target.value as "km" | "mi" })
-                }
+                onChange={e => setSettings({ ...settings, unit: e.target.value as "km" | "mi" })}
                 className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1"
               >
                 <option value="km">Kilometres</option>
