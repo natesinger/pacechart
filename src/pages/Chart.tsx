@@ -1,22 +1,39 @@
 import { useEffect, useRef, useState } from "react";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
+import { HomeIcon } from "@heroicons/react/16/solid";
 
-/*──────────── data & helpers ────────────*/
+/*────────────────────────── configurable sizing ──────────────────────────*/
+/**
+ * Set **one** width & height here and every cell (gear button, headers, sticky
+ * distance column, data grid) will render exactly the same size – keeping the
+ * header perfectly aligned with the scrollable body.
+ */
+export const CELL_WIDTH  = 120; // pixels
+export const CELL_HEIGHT = 56;  // pixels
+const cellStyle = {
+  width: CELL_WIDTH,
+  minWidth: CELL_WIDTH,
+  maxWidth: CELL_WIDTH,
+  height: CELL_HEIGHT,
+  minHeight: CELL_HEIGHT,
+} as const;
+
+/*──────────────────────────── data & helpers ─────────────────────────────*/
 const KM = [
   0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1,
   1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6,
   6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10,
   11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-  21.1, 25, 30, 35, 40, 42.2, 50, 60, 70, 80, 90, 100
+  21.1, 25, 30, 35, 40, 42.2, 50, 60, 70, 80, 90, 100,
 ];
 const PACE = [
-   3,  3.5,  4,  4.5,  5,  5.5,  6,  6.5,  7,  7.5,
-   8,  8.5,  9,  9.5, 10, 10.5, 11, 11.5, 12, 12.5,
-  13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 17.5,
-  18, 18.5, 19, 19.5, 20, 20.5, 21, 21.5, 22, 22.5,
-  23, 23.5, 24, 24.5, 25, 25.5, 26, 26.5, 27, 27.5,
-  28, 28.5, 29, 29.5, 30, 30.5, 31, 31.5, 32
+   3 ,  3.5,  4 ,  4.5,  5 ,  5.5,  6 ,  6.5,  7 ,  7.5,
+   8 ,  8.5,  9 ,  9.5, 10 , 10.5, 11 , 11.5, 12 , 12.5,
+  13 , 13.5, 14 , 14.5, 15 , 15.5, 16 , 16.5, 17 , 17.5,
+  18 , 18.5, 19 , 19.5, 20 , 20.5, 21 , 21.5, 22 , 22.5,
+  23 , 23.5, 24 , 24.5, 25 , 25.5, 26 , 26.5, 27 , 27.5,
+  28 , 28.5, 29 , 29.5, 30 , 30.5, 31 , 31.5, 32,
 ];
 
 type Settings  = { unit: "km" | "mi" };
@@ -35,7 +52,8 @@ const load = <T,>(k: string, d: T): T => {
 };
 const save = <T,>(k: string, v: T) => localStorage.setItem(k, JSON.stringify(v));
 
-export default function Chart() {
+/*────────────────────────────── component ───────────────────────────────*/
+export default function PaceChart() {
   /*──── persistent state ────*/
   const [settings, setSettings] = useState<Settings>(() => load("pace.set", { unit: "km" }));
   const [hl,       setHL]       = useState<Highlight>(() => load("pace.hl",  { r: -1, c: -1 }));
@@ -68,7 +86,7 @@ export default function Chart() {
       x:  e.clientX,
       y:  e.clientY,
       sx: bodyRef.current!.scrollLeft,
-      sy: bodyRef.current!.scrollTop
+      sy: bodyRef.current!.scrollTop,
     };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
@@ -89,23 +107,41 @@ export default function Chart() {
   return (
     <div className="h-screen flex flex-col overflow-hidden text-zinc-100">
       {/*─── sticky header ───*/}
-      <div ref={headerRef}
-           className="sticky top-0 bg-zinc-800 border-b border-zinc-700 z-30 overflow-hidden">
-        <table className="border-separate border-spacing-0 select-none">
+      <div
+        ref={headerRef}
+        className="sticky top-0 bg-zinc-800 border-b border-zinc-700 z-30 overflow-hidden"
+      >
+        <table className="table-fixed border-collapse select-none">
           <thead>
             <tr>
-              <th className="w-20 h-14 bg-zinc-800 border border-zinc-700 sticky left-0 z-30">
-                <button onClick={() => setOpen(true)}
-                        className="p-1 hover:text-emerald-400">
+              {/* gear + UNIT header */}
+              <th
+                style={cellStyle}
+                className="sticky left-0 z-30 bg-zinc-800 border border-zinc-700 flex flex-row items-center justify-center gap-4"
+              > 
+                <a
+                  href="/"
+                  className="block text-center text-xs text-emerald-400 hover:underline flex flex-row"
+                >
+                  <HomeIcon className="h-5 w-5 mx-auto" />
+                </a>
+                <button
+                  onClick={() => setOpen(true)}
+                  className="p-1 hover:text-emerald-400"
+                >
                   <Cog6ToothIcon className="h-5 w-5 mx-auto" />
                 </button>
               </th>
+
               {PACE.map((p, i) => (
-                <th key={i}
-                    className={clsx(
-                      "px-4 h-14 text-sm font-medium bg-zinc-800 border border-zinc-700",
-                      hl.c === i && "bg-emerald-800"
-                    )}>
+                <th
+                  key={i}
+                  style={cellStyle}
+                  className={clsx(
+                    "text-sm font-medium bg-zinc-800 border border-zinc-700",
+                    hl.c === i && "bg-emerald-800",
+                  )}
+                >
                   {p}&nbsp;min/{settings.unit}
                 </th>
               ))}
@@ -117,36 +153,39 @@ export default function Chart() {
       {/*─── scrollable body ───*/}
       <div
         ref={bodyRef}
-        className="relative flex-1 min-h-0 min-w-0 overflow-auto scrollbar-hide
-                   cursor-grab overscroll-contain touch-pan-y"
+        className="relative flex-1 min-h-0 min-w-0 overflow-auto scrollbar-hide cursor-grab overscroll-contain touch-pan-y"
         onScroll={sync}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
         onPointerLeave={up}
       >
-        <table className="border-separate border-spacing-0 w-max min-w-full select-none">
+        <table className="table-fixed border-collapse w-max min-w-full select-none">
           <tbody>
             {dist.map((d, r) => (
               <tr key={r}>
                 {/* sticky left distance col */}
-                <th className={clsx(
-                      "sticky left-0 z-10 w-20 h-14 px-2 bg-zinc-800 border border-zinc-700 font-medium",
-                      hl.r === r && "bg-emerald-800"
-                    )}>
+                <th
+                  style={cellStyle}
+                  className={clsx(
+                    "sticky left-0 z-10 bg-zinc-800 border border-zinc-700 font-medium",
+                    hl.r === r && "bg-emerald-800",
+                  )}
+                >
                   {d}&nbsp;{settings.unit}
                 </th>
 
                 {PACE.map((t, c) => (
                   <td
                     key={c}
-                    onDoubleClick={() => setHL(
-                      hl.r === r && hl.c === c ? { r: -1, c: -1 } : { r, c }
-                    )}
+                    style={cellStyle}
+                    onDoubleClick={() =>
+                      setHL(hl.r === r && hl.c === c ? { r: -1, c: -1 } : { r, c })
+                    }
                     className={clsx(
-                      "w-28 h-14 text-center border border-zinc-700",
+                      "text-center border border-zinc-700",
                       (hl.r === r || hl.c === c) && "bg-emerald-900 hover:bg-emerald-900",
-                      "hover:bg-zinc-700"
+                      "hover:bg-zinc-700",
                     )}
                   >
                     {fmt(d * t)}
@@ -168,7 +207,9 @@ export default function Chart() {
               <span className="mr-2">Units:</span>
               <select
                 value={settings.unit}
-                onChange={e => setSettings({ ...settings, unit: e.target.value as "km" | "mi" })}
+                onChange={(e) =>
+                  setSettings({ ...settings, unit: e.target.value as "km" | "mi" })
+                }
                 className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1"
               >
                 <option value="km">Kilometres</option>
