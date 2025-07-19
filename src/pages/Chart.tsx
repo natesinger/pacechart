@@ -51,7 +51,7 @@ function save(key: string, value: unknown) {
 
 /*──────────────────────────────── types ──────────────────────────────────*/
 type Settings  = { unit: "km" | "mi"; paceStep: 10 | 15 | 30 | 60 };
-type Highlight = { r: number; c: number };
+type Highlight = { r: number | null; c: number | null };
 
 /*────────────────────── utility fns ─────────────────────*/
 const fmt = (m: number) => {
