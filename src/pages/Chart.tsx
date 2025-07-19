@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 
 /*────────────────────────── configurable sizing ──────────────────────────*/
-export const CELL_WIDTH  = 80; // pixels
-export const CELL_HEIGHT = 40;  // pixels
+export const CELL_WIDTH = 80; // pixels
+export const CELL_HEIGHT = 40; // pixels
 const cellStyle = {
   width: CELL_WIDTH,
   minWidth: CELL_WIDTH,
@@ -13,10 +13,9 @@ const cellStyle = {
 } as const;
 
 /*──────────────────────────── highlight colors ───────────────────────────*/
-
 export const HIGHLIGHT_LIGHT = "bg-slate-700";
-export const HIGHLIGHT       = "bg-slate-800";
-export const HIGHLIGHT_DEEP  = "bg-slate-900";
+export const HIGHLIGHT = "bg-slate-800";
+export const HIGHLIGHT_DEEP = "bg-slate-900";
 
 /*──────────────────────────── data & helpers ─────────────────────────────*/
 const KM = [
@@ -27,22 +26,22 @@ const KM = [
   21.1, 25, 30, 35, 40, 42.2, 50, 60, 70, 80, 90, 100,
 ];
 const PACE = [
-   3 ,  3.5,  4 ,  4.5,  5 ,  5.5,  6 ,  6.5,  7 ,  7.5,
-   8 ,  8.5,  9 ,  9.5, 10 , 10.5, 11 , 11.5, 12 , 12.5,
-  13 , 13.5, 14 , 14.5, 15 , 15.5, 16 , 16.5, 17 , 17.5,
-  18 , 18.5, 19 , 19.5, 20 , 20.5, 21 , 21.5, 22 , 22.5,
-  23 , 23.5, 24 , 24.5, 25 , 25.5, 26 , 26.5, 27 , 27.5,
-  28 , 28.5, 29 , 29.5, 30 , 30.5, 31 , 31.5, 32,
+  3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5,
+  8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5,
+  13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 17.5,
+  18, 18.5, 19, 19.5, 20, 20.5, 21, 21.5, 22, 22.5,
+  23, 23.5, 24, 24.5, 25, 25.5, 26, 26.5, 27, 27.5,
+  28, 28.5, 29, 29.5, 30, 30.5, 31, 31.5, 32,
 ];
 
 /*────────────────────────────── other styling ───────────────────────────*/
-export const TOP_ROW_BORDER  = "border-b-4 border-b-zinc-500";
+export const TOP_ROW_BORDER = "border-b-4 border-b-zinc-500";
 export const LEFT_COL_BORDER = "border-r-4 border-r-zinc-500";
 
 /*────────────────────────── localStorage helpers ──────────────────────────*/
 const STORAGE_KEYS = {
-  SETTINGS: 'pace-chart-settings',
-  HIGHLIGHT: 'pace-chart-highlight'
+  SETTINGS: "pace-chart-settings",
+  HIGHLIGHT: "pace-chart-highlight",
 };
 
 const loadFromStorage = (key: string, defaultValue: any) => {
@@ -64,106 +63,124 @@ const saveToStorage = (key: string, value: any) => {
 };
 
 /*──────────────────────────────── types ─────────────────────────────────*/
-type Settings  = { unit: "km" | "mi" };
+type Settings = { unit: "km" | "mi" };
 type Highlight = { r: number | null; c: number | null };
 
 const km2mi = (k: number) => +(k * 0.621371).toFixed(2);
 const fmt = (m: number) => {
-  const h  = Math.floor(m / 60);
-  const mm = Math.floor(m % 60).toString().padStart(2, "0");
-  const ss = Math.round((m % 1) * 60).toString().padStart(2, "0");
+  const h = Math.floor(m / 60);
+  const mm = Math.floor(m % 60)
+    .toString()
+    .padStart(2, "0");
+  const ss = Math.round((m % 1) * 60)
+    .toString()
+    .padStart(2, "0");
   return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 };
 
 /*────────────────────────────── component ───────────────────────────────*/
 export default function PaceChart() {
-  // Initialize state from localStorage
-  const [settings, setSettings] = useState<Settings>(() => 
-    loadFromStorage(STORAGE_KEYS.SETTINGS, { unit: "km" })
+  // Initialise state from localStorage
+  const [settings, setSettings] = useState<Settings>(() =>
+    loadFromStorage(STORAGE_KEYS.SETTINGS, { unit: "km" }),
   );
-  
   const [hl, setHL] = useState<Highlight>(() =>
-    loadFromStorage(STORAGE_KEYS.HIGHLIGHT, { r: null, c: null })
+    loadFromStorage(STORAGE_KEYS.HIGHLIGHT, { r: null, c: null }),
   );
-  
   const [open, setOpen] = useState(false);
   const dist = settings.unit === "km" ? KM : KM.map(km2mi);
 
-  // Save to localStorage when state changes
+  // Persist state → localStorage
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.SETTINGS, settings);
   }, [settings]);
-
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.HIGHLIGHT, hl);
   }, [hl]);
 
   /* refs & scroll sync */
-  const bodyRef   = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const sync = () => {
     if (headerRef.current && bodyRef.current)
       headerRef.current.scrollLeft = bodyRef.current.scrollLeft;
   };
 
-  /* drag‑to‑scroll logic (unchanged) */
+  /* drag‑to‑scroll logic – pointer‑capture only **after** threshold */
   const dragging = useRef(false);
   const hasMoved = useRef(false);
-  const start    = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
+  const start = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
+  const dragPointer = useRef<number | null>(null);
+
   const down = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    const target = e.target as HTMLElement;
-    if (target.closest('th[data-clickable], td[data-clickable], button')) return;
+    if (e.button !== 0) return; // left‑click only
+    // Ignore clicks on UI controls but still allow cell clicks / dblclicks
+    if (e.target instanceof HTMLElement && e.target.closest("button")) return;
+
     dragging.current = true;
     hasMoved.current = false;
+    dragPointer.current = e.pointerId;
+
     start.current = {
-      x:  e.clientX,
-      y:  e.clientY,
+      x: e.clientX,
+      y: e.clientY,
       sx: bodyRef.current!.scrollLeft,
       sy: bodyRef.current!.scrollTop,
     };
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
+
   const move = (e: React.PointerEvent) => {
     if (!dragging.current) return;
+
     const dx = e.clientX - start.current.x;
     const dy = e.clientY - start.current.y;
     const threshold = 5;
-    if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
-      if (!hasMoved.current) {
-        hasMoved.current = true;
-        bodyRef.current?.classList.add("cursor-grabbing");
-        e.preventDefault();
-      }
+
+    // Once user actually moves far enough, we engage the grab‑scroll mode
+    if (!hasMoved.current && (Math.abs(dx) > threshold || Math.abs(dy) > threshold)) {
+      hasMoved.current = true;
+      bodyRef.current?.classList.add("cursor-grabbing");
+      // Capture now so further pointer events keep coming even if we leave the div
+      bodyRef.current?.setPointerCapture(dragPointer.current!);
+      e.preventDefault();
+    }
+
+    if (hasMoved.current) {
       bodyRef.current!.scrollLeft = start.current.sx - dx;
-      bodyRef.current!.scrollTop  = start.current.sy - dy;
+      bodyRef.current!.scrollTop = start.current.sy - dy;
       sync();
     }
   };
+
   const up = (e: React.PointerEvent) => {
     if (hasMoved.current) {
       e.preventDefault();
       e.stopPropagation();
     }
+
+    if (
+      dragPointer.current !== null &&
+      bodyRef.current?.hasPointerCapture(dragPointer.current)
+    ) {
+      bodyRef.current.releasePointerCapture(dragPointer.current);
+    }
+
     dragging.current = false;
     hasMoved.current = false;
+    dragPointer.current = null;
     bodyRef.current?.classList.remove("cursor-grabbing");
   };
 
-  /* highlight toggle helpers */
+  /* highlight helpers */
   const toggleColumn = (c: number) => setHL(prev => ({ r: prev.r, c: prev.c === c ? null : c }));
-  const toggleRow    = (r: number) => setHL(prev => ({ r: prev.r === r ? null : r, c: prev.c }));
-  const toggleCell   = (r: number, c: number) => {
+  const toggleRow = (r: number) => setHL(prev => ({ r: prev.r === r ? null : r, c: prev.c }));
+  const toggleCell = (r: number, c: number) => {
     setHL(prev => (prev.r === r && prev.c === c ? { r: null, c: null } : { r, c }));
   };
-
-  /* clear highlights with localStorage update */
   const clearHighlights = () => setHL({ r: null, c: null });
 
-  /* utility */
-  function clsx(...classes: (string | boolean | undefined)[]) {
-    return classes.filter(Boolean).join(" ");
-  }
+  /* tiny util to avoid importing clsx */
+  const cx = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(" ");
 
   /*────────────────────────────── render ───────────────────────────────*/
   return (
@@ -179,11 +196,11 @@ export default function PaceChart() {
               {/* gear header */}
               <th
                 style={cellStyle}
-                className={clsx(
+                className={cx(
                   "box-border border border-zinc-700",
                   "sticky left-0 z-30 bg-zinc-700",
                   TOP_ROW_BORDER,
-                  LEFT_COL_BORDER
+                  LEFT_COL_BORDER,
                 )}
               >
                 <button onClick={() => setOpen(true)} className="p-1 hover:text-emerald-400">
@@ -196,9 +213,13 @@ export default function PaceChart() {
                   key={i}
                   data-clickable="true"
                   style={cellStyle}
-                  onDoubleClick={e => { e.stopPropagation(); e.preventDefault(); toggleColumn(i); }}
-                  className={clsx(
-                    (hl.c === i) && HIGHLIGHT_LIGHT || "bg-zinc-800",
+                  onDoubleClick={e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    toggleColumn(i);
+                  }}
+                  className={cx(
+                    hl.c === i ? HIGHLIGHT_LIGHT : "bg-zinc-800",
                     "box-border border border-zinc-700",
                     "text-sm font-semibold cursor-pointer select-none",
                     TOP_ROW_BORDER,
@@ -215,7 +236,7 @@ export default function PaceChart() {
       {/*─── scrollable body ───*/}
       <div
         ref={bodyRef}
-        className="relative flex-1 min-h-0 min-w-0 overflow-auto cursor-grab overscroll-contain touch-pan-y"
+        className="relative flex-1 min-h-0 min-w-0 overflow-auto cursor-grab overscroll-contain touch-pan-x touch-pan-y select-none"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         onScroll={sync}
         onPointerDown={down}
@@ -231,12 +252,16 @@ export default function PaceChart() {
                 <th
                   style={cellStyle}
                   data-clickable="true"
-                  onDoubleClick={e => { e.stopPropagation(); e.preventDefault(); toggleRow(r); }}
-                  className={clsx(
+                  onDoubleClick={e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    toggleRow(r);
+                  }}
+                  className={cx(
                     "box-border border border-zinc-700 text-sm",
-                    "sticky left-0 z-10 cursor-pointer select-none",
-                    (hl.r === r) && HIGHLIGHT_LIGHT || "bg-zinc-800",
-                    LEFT_COL_BORDER
+                    "sticky left-0 z-10 cursor-pointer",
+                    hl.r === r ? HIGHLIGHT_LIGHT : "bg-zinc-800",
+                    LEFT_COL_BORDER,
                   )}
                 >
                   {d} {settings.unit}
@@ -250,14 +275,16 @@ export default function PaceChart() {
                       key={c}
                       data-clickable="true"
                       style={cellStyle}
-                      onDoubleClick={e => { e.stopPropagation(); e.preventDefault(); toggleCell(r, c); }}
-                      className={clsx(
+                      onDoubleClick={e => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        toggleCell(r, c);
+                      }}
+                      className={cx(
                         "box-border border border-zinc-700",
-                        "text-center  text-sm font-light text-zinc-300 cursor-pointer select-none",
-                        highlightBoth
-                          ? HIGHLIGHT_DEEP
-                          : highlightRowOrCol && HIGHLIGHT,
-                        "hover:bg-zinc-700"
+                        "text-center text-sm font-light text-zinc-300 cursor-pointer",
+                        highlightBoth ? HIGHLIGHT_DEEP : highlightRowOrCol && HIGHLIGHT,
+                        "hover:bg-zinc-700",
                       )}
                     >
                       {fmt(d * t)}
@@ -280,7 +307,9 @@ export default function PaceChart() {
               <span className="mr-2">Units:</span>
               <select
                 value={settings.unit}
-                onChange={e => setSettings({ ...settings, unit: e.target.value as "km" | "mi" })}
+                onChange={e =>
+                  setSettings({ ...settings, unit: e.target.value as "km" | "mi" })
+                }
                 className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1"
               >
                 <option value="km">Kilometres</option>
