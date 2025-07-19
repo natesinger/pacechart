@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 
 /*────────────────────────── configurable sizing ──────────────────────────*/
-export const CELL_WIDTH  = 100; // pixels
-export const CELL_HEIGHT = 56;  // pixels
+export const CELL_WIDTH  = 80; // pixels
+export const CELL_HEIGHT = 40;  // pixels
 const cellStyle = {
   width: CELL_WIDTH,
   minWidth: CELL_WIDTH,
@@ -11,6 +11,12 @@ const cellStyle = {
   height: CELL_HEIGHT,
   minHeight: CELL_HEIGHT,
 } as const;
+
+/*──────────────────────────── highlight colors ───────────────────────────*/
+
+export const HIGHLIGHT_LIGHT = "bg-slate-700";
+export const HIGHLIGHT       = "bg-slate-800";
+export const HIGHLIGHT_DEEP  = "bg-slate-900";
 
 /*──────────────────────────── data & helpers ─────────────────────────────*/
 const KM = [
@@ -29,14 +35,36 @@ const PACE = [
   28 , 28.5, 29 , 29.5, 30 , 30.5, 31 , 31.5, 32,
 ];
 
-/*────────────────────────────── highlight borders ───────────────────────*/
-export const TOP_ROW_BORDER  = "border-b-4 border-b-zinc-500"; // header only
-export const LEFT_COL_BORDER = "border-r-4 border-r-zinc-500"; // sticky column
+/*────────────────────────────── other styling ───────────────────────────*/
+export const TOP_ROW_BORDER  = "border-b-4 border-b-zinc-500";
+export const LEFT_COL_BORDER = "border-r-4 border-r-zinc-500";
 
+/*────────────────────────── localStorage helpers ──────────────────────────*/
+const STORAGE_KEYS = {
+  SETTINGS: 'pace-chart-settings',
+  HIGHLIGHT: 'pace-chart-highlight'
+};
+
+const loadFromStorage = (key: string, defaultValue: any) => {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : defaultValue;
+  } catch (error) {
+    console.warn(`Failed to load ${key} from localStorage:`, error);
+    return defaultValue;
+  }
+};
+
+const saveToStorage = (key: string, value: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn(`Failed to save ${key} to localStorage:`, error);
+  }
+};
+
+/*──────────────────────────────── types ─────────────────────────────────*/
 type Settings  = { unit: "km" | "mi" };
-/**
- * r/c are `null` when no row / column is selected
- */
 type Highlight = { r: number | null; c: number | null };
 
 const km2mi = (k: number) => +(k * 0.621371).toFixed(2);
@@ -49,36 +77,43 @@ const fmt = (m: number) => {
 
 /*────────────────────────────── component ───────────────────────────────*/
 export default function PaceChart() {
-  /*──── persistent state ────*/
-  const [settings, setSettings] = useState<Settings>({ unit: "km" });
-  const [hl,       setHL]       = useState<Highlight>({ r: null, c: null });
-  const [open,     setOpen]     = useState(false);
-
+  // Initialize state from localStorage
+  const [settings, setSettings] = useState<Settings>(() => 
+    loadFromStorage(STORAGE_KEYS.SETTINGS, { unit: "km" })
+  );
+  
+  const [hl, setHL] = useState<Highlight>(() =>
+    loadFromStorage(STORAGE_KEYS.HIGHLIGHT, { r: null, c: null })
+  );
+  
+  const [open, setOpen] = useState(false);
   const dist = settings.unit === "km" ? KM : KM.map(km2mi);
 
-  /*──── refs ────*/
+  // Save to localStorage when state changes
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+  }, [settings]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.HIGHLIGHT, hl);
+  }, [hl]);
+
+  /* refs & scroll sync */
   const bodyRef   = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-
-  /* keep header aligned with horizontal scroll */
   const sync = () => {
     if (headerRef.current && bodyRef.current)
       headerRef.current.scrollLeft = bodyRef.current.scrollLeft;
   };
 
-  /*──── drag‑to‑scroll helpers ────*/
+  /* drag‑to‑scroll logic (unchanged) */
   const dragging = useRef(false);
   const hasMoved = useRef(false);
   const start    = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
-
   const down = (e: React.PointerEvent) => {
-    if (e.button !== 0) return; // only LMB
-    // Don't start dragging if clicking on a clickable element
+    if (e.button !== 0) return;
     const target = e.target as HTMLElement;
-    if (target.closest('th[data-clickable], td[data-clickable], button')) {
-      return;
-    }
-    
+    if (target.closest('th[data-clickable], td[data-clickable], button')) return;
     dragging.current = true;
     hasMoved.current = false;
     start.current = {
@@ -89,26 +124,22 @@ export default function PaceChart() {
     };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
-
   const move = (e: React.PointerEvent) => {
     if (!dragging.current) return;
-    
-    const deltaX = e.clientX - start.current.x;
-    const deltaY = e.clientY - start.current.y;
-    const threshold = 5; // minimum movement to be considered a drag
-    
-    if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
+    const dx = e.clientX - start.current.x;
+    const dy = e.clientY - start.current.y;
+    const threshold = 5;
+    if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
       if (!hasMoved.current) {
         hasMoved.current = true;
         bodyRef.current?.classList.add("cursor-grabbing");
         e.preventDefault();
       }
-      bodyRef.current!.scrollLeft = start.current.sx - deltaX;
-      bodyRef.current!.scrollTop  = start.current.sy - deltaY;
+      bodyRef.current!.scrollLeft = start.current.sx - dx;
+      bodyRef.current!.scrollTop  = start.current.sy - dy;
       sync();
     }
   };
-
   const up = (e: React.PointerEvent) => {
     if (hasMoved.current) {
       e.preventDefault();
@@ -119,40 +150,19 @@ export default function PaceChart() {
     bodyRef.current?.classList.remove("cursor-grabbing");
   };
 
-  /*──── highlight toggle helpers ────*/
-  const toggleColumn = (c: number) => {
-    console.log('Toggling column:', c, 'current:', hl.c);
-    if (hl.c === c) {
-      setHL({ r: hl.r, c: null }); // clear column but keep row
-    } else {
-      setHL({ r: hl.r, c });       // set column and keep row
-    }
+  /* highlight toggle helpers */
+  const toggleColumn = (c: number) => setHL(prev => ({ r: prev.r, c: prev.c === c ? null : c }));
+  const toggleRow    = (r: number) => setHL(prev => ({ r: prev.r === r ? null : r, c: prev.c }));
+  const toggleCell   = (r: number, c: number) => {
+    setHL(prev => (prev.r === r && prev.c === c ? { r: null, c: null } : { r, c }));
   };
 
-  const toggleRow = (r: number) => {
-    console.log('Toggling row:', r, 'current:', hl.r);
-    if (hl.r === r) {
-      setHL({ r: null, c: hl.c }); // clear row but keep column
-    } else {
-      setHL({ r, c: hl.c });       // set row and keep column
-    }
-  };
+  /* clear highlights with localStorage update */
+  const clearHighlights = () => setHL({ r: null, c: null });
 
-  const toggleCell = (r: number, c: number) => {
-    console.log('Toggling cell:', r, c, 'current:', hl.r, hl.c);
-    if (hl.r === r && hl.c === c) {
-      setHL({ r: null, c: null }); // clear both
-    } else {
-      setHL({ r, c });             // set both
-    }
-  };
-
-  /*──── reusable cell class ────*/
-  const cellBase = "box-border border border-zinc-700";
-  const sticky   = "sticky left-0 z-10 bg-zinc-800 text-md font-semibold";
-
+  /* utility */
   function clsx(...classes: (string | boolean | undefined)[]) {
-    return classes.filter(Boolean).join(' ');
+    return classes.filter(Boolean).join(" ");
   }
 
   /*────────────────────────────── render ───────────────────────────────*/
@@ -166,10 +176,15 @@ export default function PaceChart() {
         <table className="table-fixed border-separate border-spacing-0 select-none">
           <thead>
             <tr>
-              {/* gear header (bottom + right borders) */}
+              {/* gear header */}
               <th
                 style={cellStyle}
-                className={clsx(cellBase, sticky, TOP_ROW_BORDER, LEFT_COL_BORDER, "z-30")}
+                className={clsx(
+                  "box-border border border-zinc-700",
+                  "sticky left-0 z-30 bg-zinc-700",
+                  TOP_ROW_BORDER,
+                  LEFT_COL_BORDER
+                )}
               >
                 <button onClick={() => setOpen(true)} className="p-1 hover:text-emerald-400">
                   <Cog6ToothIcon className="h-5 w-5 mx-auto" />
@@ -181,20 +196,12 @@ export default function PaceChart() {
                   key={i}
                   data-clickable="true"
                   style={cellStyle}
-                  onDoubleClick={(e) => {
-                    console.log('Header double clicked:', i);
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleColumn(i);
-                  }}
-                  onClick={(e) => {
-                    console.log('Header single clicked:', i);
-                  }}
+                  onDoubleClick={e => { e.stopPropagation(); e.preventDefault(); toggleColumn(i); }}
                   className={clsx(
-                    cellBase,
-                    "text-md font-semibold bg-zinc-800 cursor-pointer select-none",
+                    (hl.c === i) && HIGHLIGHT_LIGHT || "bg-zinc-800",
+                    "box-border border border-zinc-700",
+                    "text-sm font-semibold cursor-pointer select-none",
                     TOP_ROW_BORDER,
-                    hl.c === i && "bg-emerald-900",
                   )}
                 >
                   {p} m/{settings.unit}
@@ -209,7 +216,7 @@ export default function PaceChart() {
       <div
         ref={bodyRef}
         className="relative flex-1 min-h-0 min-w-0 overflow-auto cursor-grab overscroll-contain touch-pan-y"
-        style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         onScroll={sync}
         onPointerDown={down}
         onPointerMove={move}
@@ -220,54 +227,43 @@ export default function PaceChart() {
           <tbody>
             {dist.map((d, r) => (
               <tr key={r}>
-                {/* sticky left distance col (right border) */}
+                {/* sticky left distance col */}
                 <th
                   style={cellStyle}
                   data-clickable="true"
-                  onDoubleClick={(e) => {
-                    console.log('Row double clicked:', r);
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleRow(r);
-                  }}
-                  onClick={(e) => {
-                    console.log('Row single clicked:', r);
-                  }}
+                  onDoubleClick={e => { e.stopPropagation(); e.preventDefault(); toggleRow(r); }}
                   className={clsx(
-                    cellBase,
-                    sticky,
-                    LEFT_COL_BORDER,
-                    "cursor-pointer select-none",
-                    hl.r === r && "bg-emerald-900",
+                    "box-border border border-zinc-700 text-sm",
+                    "sticky left-0 z-10 cursor-pointer select-none",
+                    (hl.r === r) && HIGHLIGHT_LIGHT || "bg-zinc-800",
+                    LEFT_COL_BORDER
                   )}
                 >
                   {d} {settings.unit}
                 </th>
 
-                {PACE.map((t, c) => (
-                  <td
-                    key={c}
-                    data-clickable="true"
-                    style={cellStyle}
-                    onDoubleClick={(e) => {
-                      console.log('Cell double clicked:', r, c);
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toggleCell(r, c);
-                    }}
-                    onClick={(e) => {
-                      console.log('Cell single clicked:', r, c);
-                    }}
-                    className={clsx(
-                      cellBase,
-                      "text-center text-md font-light text-zinc-300 cursor-pointer select-none",
-                      (hl.r === r || hl.c === c) && "bg-emerald-900 hover:bg-emerald-900",
-                      "hover:bg-zinc-700",
-                    )}
-                  >
-                    {fmt(d * t)}
-                  </td>
-                ))}
+                {PACE.map((t, c) => {
+                  const highlightBoth = hl.r === r && hl.c === c;
+                  const highlightRowOrCol = hl.r === r || hl.c === c;
+                  return (
+                    <td
+                      key={c}
+                      data-clickable="true"
+                      style={cellStyle}
+                      onDoubleClick={e => { e.stopPropagation(); e.preventDefault(); toggleCell(r, c); }}
+                      className={clsx(
+                        "box-border border border-zinc-700",
+                        "text-center  text-sm font-light text-zinc-300 cursor-pointer select-none",
+                        highlightBoth
+                          ? HIGHLIGHT_DEEP
+                          : highlightRowOrCol && HIGHLIGHT,
+                        "hover:bg-zinc-700"
+                      )}
+                    >
+                      {fmt(d * t)}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -278,7 +274,7 @@ export default function PaceChart() {
       {open && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-zinc-800 p-6 rounded-lg w-80 shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">Settings</h2>
+            <h2 className="text-md font-semibold mb-4">Settings</h2>
 
             <label className="block mb-3">
               <span className="mr-2">Units:</span>
@@ -294,7 +290,7 @@ export default function PaceChart() {
 
             <div className="mt-6 flex justify-end gap-4">
               <button
-                onClick={() => setHL({ r: null, c: null })}
+                onClick={clearHighlights}
                 className="text-xs px-3 py-1 border border-zinc-600 rounded hover:bg-zinc-700"
               >
                 Clear highlight
