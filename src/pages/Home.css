@@ -5,3 +5,9 @@
     -moz-user-select: none;
     -ms-user-select: none;
 }
+
+.mobile-height-fix {
+  min-height: 100vh;
+  min-height: 100dvh; /* Fallback for newer browsers */
+  min-height: calc(100vh - env(keyboard-inset-height, 0px)); /* Account for virtual keyboard */
+}
