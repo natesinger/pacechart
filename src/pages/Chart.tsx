@@ -7,6 +7,7 @@ import {
   //  useLayoutEffect  ⟵ replaced
 } from "react";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
+import { HomeIcon } from "@heroicons/react/16/solid";
 
 /*────────────────────────── configurable sizing ──────────────────────────*/
 export const CELL_WIDTH  = 80;
@@ -287,11 +288,17 @@ export default function PaceChart() {
               <th
                 style={cellStyle}
                 className={cx(
-                  "box-border border border-zinc-700 sticky left-0 z-30 bg-zinc-700",
+                  "box-border border border-zinc-700 sticky left-0 z-30 bg-zinc-700 flex flex-row items-center justify-center gap-3",
                   TOP_ROW_BORDER,
                   LEFT_COL_BORDER
                 )}
               >
+                <a
+                  href="/"
+                  className="p-1 hover:text-blue-300"
+                >
+                  <HomeIcon className="h-5 w-5 mx-auto" />
+                </a>
                 <button
                   onClick={() => setOpen(true)}
                   className="p-1 hover:text-blue-300"
