@@ -1,14 +1,15 @@
+/* PaceChart.tsx – improved performance build */
 import {
   useEffect,
   useMemo,
   useRef,
   useState,
-  useLayoutEffect,
+  //  useLayoutEffect  ⟵ replaced
 } from "react";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 
 /*────────────────────────── configurable sizing ──────────────────────────*/
-export const CELL_WIDTH = 80;
+export const CELL_WIDTH  = 80;
 export const CELL_HEIGHT = 40;
 const cellStyle = {
   width: CELL_WIDTH,
@@ -46,7 +47,7 @@ function save(key: string, value: unknown) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {}
+  } catch {/* ignore quota / private‑mode failures */}
 }
 
 /*──────────────────────────────── types ──────────────────────────────────*/
@@ -134,15 +135,33 @@ export default function PaceChart() {
   /* refs */
   const bodyRef   = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  const sync = () => {
+
+  /*──────── scrolling sync (header ⇆ body) ────────*/
+  const syncHeader = () => {
     if (headerRef.current && bodyRef.current)
       headerRef.current.scrollLeft = bodyRef.current.scrollLeft;
   };
 
-  /*──────── desktop drag – start scrolling on first pixel ────────*/
+  /*──────── desktop drag – throttled with rAF ────────*/
   const dragId   = useRef<number | null>(null);
   const start    = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
   const hasMoved = useRef(false);
+
+  // live delta from the last pointermove event
+  const deltaRef = useRef({ dx: 0, dy: 0 });
+  const frameRef = useRef<number | null>(null);
+
+  const scheduleScroll = () => {
+    if (frameRef.current !== null) return; // already scheduled
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      const br = bodyRef.current;
+      if (!br) return;
+      br.scrollLeft = start.current.sx - deltaRef.current.dx;
+      br.scrollTop  = start.current.sy - deltaRef.current.dy;
+      syncHeader();
+    });
+  };
 
   const down = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse" || e.button) return;
@@ -161,17 +180,15 @@ export default function PaceChart() {
   const move = (e: React.PointerEvent) => {
     if (e.pointerId !== dragId.current) return;
 
-    const dx = e.clientX - start.current.x;
-    const dy = e.clientY - start.current.y;
+    deltaRef.current.dx = e.clientX - start.current.x;
+    deltaRef.current.dy = e.clientY - start.current.y;
 
     if (!hasMoved.current) {
       hasMoved.current = true;
       bodyRef.current?.setPointerCapture(dragId.current);
       bodyRef.current?.classList.add("cursor-grabbing");
     }
-    bodyRef.current!.scrollLeft = start.current.sx - dx;
-    bodyRef.current!.scrollTop  = start.current.sy - dy;
-    sync();
+    scheduleScroll();
   };
 
   const up = () => {
@@ -181,9 +198,9 @@ export default function PaceChart() {
     bodyRef.current?.classList.remove("cursor-grabbing");
   };
 
-  /*──────── auto‑centre once ────────*/
+  /*──────── auto‑centre once – run AFTER first paint ────────*/
   const didInitialScroll = useRef(false);
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (didInitialScroll.current || !dists.length || !paces.length) return;
     const br = bodyRef.current;
     if (!br) return;
@@ -203,13 +220,11 @@ export default function PaceChart() {
       Math.min(cellCenterY - br.clientHeight / 2, br.scrollHeight - br.clientHeight)
     );
 
-    requestAnimationFrame(() => {
-      br.scrollLeft = desiredLeft;
-      br.scrollTop  = desiredTop;
-      headerRef.current && (headerRef.current.scrollLeft = desiredLeft);
-      didInitialScroll.current = true;
-    });
-  }, [dists.length, paces.length]);
+    br.scrollLeft = desiredLeft;
+    br.scrollTop  = desiredTop;
+    headerRef.current && (headerRef.current.scrollLeft = desiredLeft);
+    didInitialScroll.current = true;
+  }, [dists.length, paces.length, hl.c, hl.r]);
 
   /*──────── highlight helpers ────────*/
   const toggleCol  = (c: number) => setHL(p => ({ r: p.r,       c: p.c === c ? null : c }));
@@ -310,7 +325,7 @@ export default function PaceChart() {
         ref={bodyRef}
         className="relative flex-1 min-h-0 min-w-0 overflow-auto cursor-grab overscroll-none touch-pan-x touch-pan-y will-change-scroll select-none"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        onScroll={sync}
+        onScroll={syncHeader}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
