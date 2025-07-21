@@ -1,0 +1,1 @@
+{"root":["./src/components/ui/badge.tsx","./src/lib/utils.ts","./src/pages/calculator.tsx","./src/pages/chart.tsx","./src/pages/home.tsx","./src/react-app/app.tsx","./src/react-app/main.tsx","./src/react-app/vite-env.d.ts","./src/worker/index.ts"],"version":"5.8.3"}

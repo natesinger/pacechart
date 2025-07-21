@@ -1,8 +1,29 @@
 {
-  "extends": "./tsconfig.node.json",
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.worker.tsbuildinfo",
-    "types": ["vite/client", "./worker-configuration.d.ts"]
+    // --- FIXES FOR COMPOSITE PROJECT ---
+    "composite": true,
+    "declaration": true,
+    
+    // --- Original Settings ---
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    // "allowImportingTsExtensions": true, // REMOVED: Conflicts with the build process.
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    // "noEmit": true, // REMOVED: Conflicts with composite projects.
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
   },
-  "include": ["src/worker"]
+  "include": ["vite.config.ts"]
 }

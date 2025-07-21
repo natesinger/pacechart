@@ -23,11 +23,11 @@ export default function App() {
 
   // --- Calculation Logic ---
 
-  const paceToSeconds = (minutes, seconds) => {
+  const paceToSeconds = (minutes: string, seconds: string) => {
     return (parseFloat(minutes) || 0) * 60 + (parseFloat(seconds) || 0);
   };
 
-  const secondsToPace = (seconds) => {
+  const secondsToPace = (seconds: number) => {
     if (isNaN(seconds) || !isFinite(seconds)) return { minutes: "", seconds: "" };
     const mins = Math.floor(seconds / 60);
     const secs = Math.round(seconds % 60);
@@ -37,11 +37,11 @@ export default function App() {
     };
   };
 
-  const timeToSeconds = (hours, minutes, seconds) => {
+  const timeToSeconds = (hours: string, minutes: string, seconds: string) => {
     return (parseFloat(hours) || 0) * 3600 + (parseFloat(minutes) || 0) * 60 + (parseFloat(seconds) || 0);
   };
 
-  const secondsToTime = (totalSeconds) => {
+  const secondsToTime = (totalSeconds: number) => {
     if (isNaN(totalSeconds) || !isFinite(totalSeconds)) return { hours: "", minutes: "", seconds: "" };
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -91,7 +91,7 @@ export default function App() {
   }, [inputs, activeCalculation]);
 
   // Handles input changes and sanitizes values.
-  const handleInputChange = (category, field, value) => {
+  const handleInputChange = (category: keyof typeof inputs, field: string | null, value: string) => {
     const sanitizedValue = value && parseFloat(value) < 0 ? Math.abs(parseFloat(value)).toString() : value;
     setInputs(prev => ({
       ...prev,
@@ -115,7 +115,7 @@ export default function App() {
     });
   };
 
-  const isCalculatedField = (type) => activeCalculation === type;
+  const isCalculatedField = (type: string) => activeCalculation === type;
 
   return (
     // FIX: Removed flexbox from the root element to allow natural page flow and scrolling.
