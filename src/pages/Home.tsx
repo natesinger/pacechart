@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import React from "react";
+import './Home.css';
 
 import { CalculatorIcon, PresentationChartLineIcon } from "@heroicons/react/16/solid";
 
@@ -30,9 +31,9 @@ export default function Home() {
       <div className="flex gap-3 flex-col w-full justify-center items-center">
         <h1 className="text-7xl font-bold text-white mb-8 text-zinc-100">
           Pace
-          <span className="text-zinc-400 text-xl"> </span>
+          <span className="text-zinc-400 text-xl unselectable"> </span>
           Ch
-          <span className="text-zinc-400 text-5xl">.</span>
+          <span className="text-zinc-400 text-5xl unselectable">.</span>
           art
         </h1>
         <ButtonLink
