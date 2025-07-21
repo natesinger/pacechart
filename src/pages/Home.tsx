@@ -13,8 +13,7 @@ interface ButtonLinkProps {
 export const ButtonLink = ({ icon, title, to }: ButtonLinkProps) => {
   const base = `flex items-center gap-3 h-16 w-full max-w-md rounded-lg px-6
                 border-2 bg-zinc-800 border-zinc-700
-                text-slate-300 hover:text-white
-                focus:outline-none focus:ring-4
+                text-slate-300 hover:text-white hover:bg-zinc-800/70
                 transition-colors`;
 
   return (
@@ -27,7 +26,7 @@ export const ButtonLink = ({ icon, title, to }: ButtonLinkProps) => {
 
 export default function Home() {
   return (
-    <div className="flex items-center justify-center bg-zinc-900" style={{ overflow: "hidden", height: "100vh" }}>
+    <div className="flex items-center justify-center bg-zinc-900" style={{ overflow: "hidden", height: "100vh", width: "100vw", position: "fixed" }}>
       <div className="flex gap-3 flex-col w-full justify-center items-center mt-[-50px]">
         <h1 className="text-7xl font-bold text-white mb-8 text-zinc-100">
           Pace

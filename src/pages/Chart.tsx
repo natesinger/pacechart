@@ -301,7 +301,7 @@ export default function PaceChart() {
                 </a>
                 <button
                   onClick={() => setOpen(true)}
-                  className="p-1 hover:text-blue-300"
+                  className="p-1 hover:text-blue-300 hover:cursor-pointer"
                 >
                   <Cog6ToothIcon className="h-5 w-5 mx-auto" />
                 </button>
