@@ -15,7 +15,7 @@ export const ButtonLink = ({ icon, title, to }: ButtonLinkProps) => {
                 border-2 bg-zinc-800 border-zinc-700
                 text-slate-300 hover:text-white hover:bg-zinc-800/70
                 transition-colors hover:border-zinc-600
-                mt-0 sm:mt-[-100px]`;
+                mt-0`;
 
   return (
     <Link to={to} className={base} style={{ width: "calc(100% - 20px)" }}>
@@ -28,7 +28,7 @@ export const ButtonLink = ({ icon, title, to }: ButtonLinkProps) => {
 export default function Home() {
   return (
     <div className="flex items-center justify-center bg-zinc-900" style={{ overflow: "hidden", height: "100vh", width: "100vw", position: "fixed" }}>
-      <div className="flex gap-3 flex-col w-full justify-center items-center mt-[-50px]">
+      <div className="flex gap-3 flex-col w-full justify-center items-center mt-[-50px] sm:mt-[-100px]">
         <h1 className="text-7xl font-bold text-white mb-8 text-zinc-100">
           Pace
           <span className="text-zinc-400 text-xl unselectable"> </span>
