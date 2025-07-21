@@ -288,7 +288,7 @@ export default function PaceChart() {
               <th
                 style={cellStyle}
                 className={cx(
-                  "box-border border border-zinc-700 sticky left-0 z-30 bg-zinc-700 flex flex-row items-center justify-center gap-3",
+                  "box-border border border-zinc-700 sticky left-0 z-30 bg-zinc-700 flex flex-row items-center justify-center gap-2",
                   TOP_ROW_BORDER,
                   LEFT_COL_BORDER
                 )}
