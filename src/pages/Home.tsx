@@ -14,7 +14,8 @@ export const ButtonLink = ({ icon, title, to }: ButtonLinkProps) => {
   const base = `flex items-center gap-3 h-16 w-full max-w-md rounded-lg px-6
                 border-2 bg-zinc-800 border-zinc-700
                 text-slate-300 hover:text-white hover:bg-zinc-800/70
-                transition-colors`;
+                transition-colors hover:border-zinc-600
+                mt-0 sm:mt-[-100px]`;
 
   return (
     <Link to={to} className={base} style={{ width: "calc(100% - 20px)" }}>
