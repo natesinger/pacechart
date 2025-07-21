@@ -138,7 +138,7 @@ export default function App() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Pace Calculator</h1>
           </div>
           <p className="text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto">
-            Select a value to calculate, then fill in the other two fields.
+            Select a calculation, fill the other fields.
           </p>
         </header>
 
