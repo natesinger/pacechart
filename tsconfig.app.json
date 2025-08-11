@@ -32,6 +32,6 @@
       "@/*": ["src/*"]
     }
   },
-  // FIX: Added "src/pages" to the include path so TypeScript can find your page components.
-  "include": ["src/react-app", "src/pages"]
+  // FIX: Added all source directories to the include path so TypeScript can find all components and utilities.
+  "include": ["src/react-app", "src/pages", "src/components", "src/hooks", "src/lib"]
 }
