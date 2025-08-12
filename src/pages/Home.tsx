@@ -27,7 +27,15 @@ export const ButtonLink = ({ icon, title, to }: ButtonLinkProps) => {
 
 export default function Home() {
   return (
-    <div className="flex items-center justify-center bg-zinc-900" style={{ overflow: "hidden", height: "100vh", width: "100vw", position: "fixed" }}>
+    <div 
+      className="Home flex items-center justify-center bg-zinc-900" 
+      style={{ 
+        overflow: "hidden", 
+        height: "100vh", 
+        width: "100vw", 
+        position: "fixed"
+      }}
+    >
       <div className="flex gap-3 flex-col w-full justify-center items-center mt-[-50px] sm:mt-[-100px]">
         <h1 className="text-7xl font-bold text-white mb-8 text-zinc-100">
           Pace

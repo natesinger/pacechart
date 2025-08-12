@@ -1,0 +1,98 @@
+/* CSS structure maintained for future styling needs */
+
+/* Enhanced input/output distinction */
+.Calculator .input-field {
+  position: relative;
+  overflow: hidden;
+}
+
+.Calculator .input-field::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.Calculator .input-field:hover::before {
+  opacity: 1;
+}
+
+/* Output field styling */
+.Calculator .output-field {
+  position: relative;
+}
+
+.Calculator .output-field::after {
+  content: '✓';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: #10b981;
+  font-size: 1.25rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+/* Remove number input spinners/arrows */
+.Calculator input[type="number"]::-webkit-outer-spin-button,
+.Calculator input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.Calculator input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Ensure number inputs are properly centered */
+.Calculator input[type="number"] {
+  text-align: center;
+}
+
+/* Smooth transitions for all interactive elements */
+.Calculator input,
+.Calculator button,
+.Calculator .input-field,
+.Calculator .output-field {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced focus states */
+.Calculator input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+}
+
+/* Disabled state styling */
+.Calculator input:disabled {
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+/* Modern scrollbar for the page */
+.Calculator {
+  scrollbar-width: thin;
+  scrollbar-color: #52525b #18181b;
+}
+
+.Calculator::-webkit-scrollbar {
+  width: 8px;
+}
+
+.Calculator::-webkit-scrollbar-track {
+  background: #18181b;
+}
+
+.Calculator::-webkit-scrollbar-thumb {
+  background: #52525b;
+  border-radius: 4px;
+}
+
+.Calculator::-webkit-scrollbar-thumb:hover {
+  background: #71717a;
+}

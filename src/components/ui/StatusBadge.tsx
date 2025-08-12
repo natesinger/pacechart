@@ -13,27 +13,27 @@ const badgeConfig = {
     icon: Edit3,
     text: 'ENTER VALUES',
     colors: {
-      default: 'text-blue-200 bg-blue-900/60 border-blue-600/60',
-      accent: 'text-blue-200 bg-blue-900/60 border-blue-600/60',
-      neutral: 'text-zinc-200 bg-zinc-900/60 border-zinc-600/60'
+      default: 'text-blue-200 bg-blue-900/70 border-blue-500/70',
+      accent: 'text-blue-200 bg-blue-900/70 border-blue-500/70',
+      neutral: 'text-zinc-200 bg-zinc-900/70 border-zinc-500/70'
     }
   },
   result: {
     icon: Target,
     text: 'RESULT',
     colors: {
-      default: 'text-blue-200 bg-blue-900/60 border-blue-600/60',
-      accent: 'text-blue-200 bg-blue-900/60 border-blue-600/60',
-      neutral: 'text-zinc-200 bg-zinc-900/60 border-zinc-600/60'
+      default: 'text-blue-200 bg-blue-900/70 border-blue-500/70',
+      accent: 'text-blue-200 bg-blue-900/70 border-blue-500/70',
+      neutral: 'text-zinc-200 bg-zinc-900/70 border-zinc-500/70'
     }
   },
   calculated: {
     icon: Target,
     text: 'CALCULATED',
     colors: {
-      default: 'text-zinc-400 bg-zinc-700/40 border-zinc-600/50',
-      accent: 'text-zinc-400 bg-zinc-700/40 border-zinc-600/50',
-      neutral: 'text-zinc-400 bg-zinc-700/40 border-zinc-600/50'
+      default: 'text-zinc-300 bg-zinc-700/60 border-zinc-500/60',
+      accent: 'text-zinc-300 bg-zinc-700/60 border-zinc-500/60',
+      neutral: 'text-zinc-300 bg-zinc-700/60 border-zinc-500/60'
     }
   }
 }
@@ -48,11 +48,11 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   
   return (
     <div className={cn(
-      'flex items-center gap-2 text-sm font-bold px-3 py-2 rounded-lg border shadow-lg',
+      'flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg border shadow-lg transition-all duration-200',
       config.colors[variant],
       className
     )}>
-      <Icon className="w-4 h-4" />
+      <Icon className="w-3 h-3" />
       {config.text}
     </div>
   )

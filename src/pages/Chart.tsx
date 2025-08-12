@@ -9,6 +9,7 @@ import {
 import { Dialog, Transition } from "@headlessui/react";
 import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 import { HomeIcon } from "@heroicons/react/16/solid";
+import "./Chart.css";
 
 /*────────────────────────── configurable sizing ──────────────────────────*/
 export const CELL_WIDTH = 80;
@@ -321,7 +322,7 @@ export default function PaceChart() {
 
   /*───────────────────────── render ─────────────────────────*/
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden text-zinc-100 bg-zinc-900">
+    <div className="Chart h-[100dvh] flex flex-col overflow-hidden text-zinc-100 bg-zinc-900">
       {/* header */}
       <div
         ref={headerRef}
