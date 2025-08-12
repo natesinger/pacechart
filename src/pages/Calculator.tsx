@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { Calculator as CalculatorIcon, ArrowLeft, RefreshCw, Clock, MapPin, Timer } from 'lucide-react'
 import { CALCULATION_MODES, STYLING_CONFIG } from '../lib/constants'
 import { usePaceCalculator } from '../hooks/usePaceCalculator'

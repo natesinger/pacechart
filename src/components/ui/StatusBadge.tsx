@@ -1,5 +1,5 @@
 import React from 'react'
-import { Target, Edit3, Clock, MapPin, Timer } from 'lucide-react'
+import { Target, Edit3 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 export interface StatusBadgeProps {

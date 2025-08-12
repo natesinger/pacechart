@@ -49,21 +49,75 @@ export const usePaceCalculator = () => {
   ) => {
     const sanitizedValue = validationUtils.sanitizeNumericInput(value)
     
-    // Remove leading zeros but keep single "0"
-    const trimmedValue = sanitizedValue === '0' ? '0' : sanitizedValue.replace(/^0+/, '') || '0'
+    // Remove leading zeros but keep single "0" or "00" for minor fields
+    let trimmedValue = sanitizedValue
+    if (sanitizedValue === '0') {
+      trimmedValue = '0'
+    } else if (sanitizedValue === '00') {
+      trimmedValue = '00'
+    } else {
+      trimmedValue = sanitizedValue.replace(/^0+/, '') || '0'
+    }
+    
+    // Validate time constraints
+    if (category === 'time' && field) {
+      const numValue = parseInt(trimmedValue)
+      if (field === 'minutes' && numValue > 59) {
+        trimmedValue = '59'
+      } else if (field === 'seconds' && numValue > 59) {
+        trimmedValue = '59'
+      }
+    } else if (category === 'pace' && field === 'seconds') {
+      const numValue = parseInt(trimmedValue)
+      if (numValue > 59) {
+        trimmedValue = '59'
+      }
+    }
     
     setInputs(prev => {
       const newInputs = { ...prev }
       
       if (category === 'time' && field) {
-        newInputs.time = { ...prev.time, [field]: trimmedValue }
-        // Reset lower empty fields to '0'
-        if (field === 'hours' && !prev.time.minutes) newInputs.time.minutes = '0'
-        if (field === 'hours' && !prev.time.seconds) newInputs.time.seconds = '0'
-        if (field === 'minutes' && !prev.time.seconds) newInputs.time.seconds = '0'
+        // If most significant field becomes zero, clear it completely
+        if (field === 'hours' && trimmedValue === '0') {
+          newInputs.time = { ...prev.time, [field]: '' }
+        } else if (field === 'minutes' && !prev.time.hours && trimmedValue === '0') {
+          newInputs.time = { ...prev.time, [field]: '' }
+        } else {
+          newInputs.time = { ...prev.time, [field]: trimmedValue }
+        }
+        
+        // Reset lower empty fields to '00' when entering a value
+        if (trimmedValue && trimmedValue !== '0') {
+          if (field === 'hours' && !prev.time.minutes) newInputs.time.minutes = '00'
+          if (field === 'hours' && !prev.time.seconds) newInputs.time.seconds = '00'
+          if (field === 'minutes' && !prev.time.seconds) newInputs.time.seconds = '00'
+        }
+        
+        // Auto-format single digits with leading zeros when larger values exist
+        if (field === 'minutes' && prev.time.hours && trimmedValue.length === 1) {
+          newInputs.time.minutes = `0${trimmedValue}`
+        }
+        if (field === 'seconds' && (prev.time.hours || prev.time.minutes) && trimmedValue.length === 1) {
+          newInputs.time.seconds = `0${trimmedValue}`
+        }
       } else if (category === 'pace' && field) {
-        newInputs.pace = { ...prev.pace, [field]: trimmedValue }
-        if (field === 'minutes' && !prev.pace.seconds) newInputs.pace.seconds = '0'
+        // If most significant field becomes zero, clear it completely
+        if (field === 'minutes' && trimmedValue === '0') {
+          newInputs.pace = { ...prev.pace, [field]: '' }
+        } else {
+          newInputs.pace = { ...prev.pace, [field]: trimmedValue }
+        }
+        
+        // Reset lower empty fields to '00' when entering a value
+        if (trimmedValue && trimmedValue !== '0') {
+          if (field === 'minutes' && !prev.pace.seconds) newInputs.pace.seconds = '00'
+        }
+        
+        // Auto-format single digits with leading zeros when larger values exist
+        if (field === 'seconds' && prev.pace.minutes && trimmedValue.length === 1) {
+          newInputs.pace.seconds = `0${trimmedValue}`
+        }
       } else if (category === 'distance') {
         newInputs.distance = trimmedValue
       }

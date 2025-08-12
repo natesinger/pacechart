@@ -28,7 +28,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   min,
   max
 }) => {
-  const handleChange = (field: string | null, newValue: string) => {
+  const handleChange = (_field: string | null, newValue: string) => {
     if (type === 'single') {
       onChange(newValue)
     } else {
