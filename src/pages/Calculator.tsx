@@ -59,9 +59,9 @@ export default function Calculator() {
 
           {/* Input Section */}
           <div className={STYLING_CONFIG.container.base}>
-            <div className="grid grid-cols-3 gap-6" style={{ minHeight: '140px' }}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6" style={{ minHeight: '140px' }}>
               {/* Pace Section */}
-              <div className="flex flex-col items-center" style={{
+              <div className="flex flex-col items-center w-full" style={{
                 padding: '24px',
                 border: isCalculatedField('pace') ? 'none' : '2px dashed rgb(59 130 246 / 0.3)',
                 borderRadius: '16px',
@@ -82,7 +82,7 @@ export default function Calculator() {
                     Pace (per mile)
                   </label>
                 </div>
-                <div className="flex w-full">
+                <div className="flex w-full gap-2 min-w-0">
                   <input
                     type="number"
                     placeholder="m"
@@ -92,7 +92,7 @@ export default function Calculator() {
                     disabled={isCalculatedField('pace')}
                     style={{
                       flex: '1',
-                      minWidth: '0',
+                      minWidth: '60px',
                       height: '40px',
                       padding: '6px 8px',
                       border: isCalculatedField('pace') ? '1px solid rgb(82 82 91 / 0.3)' : '2px solid rgb(59 130 246 / 0.8)',
@@ -119,7 +119,7 @@ export default function Calculator() {
                     disabled={isCalculatedField('pace')}
                     style={{
                       flex: '1',
-                      minWidth: '0',
+                      minWidth: '60px',
                       height: '40px',
                       padding: '6px 8px',
                       border: isCalculatedField('pace') ? '1px solid rgb(82 82 91 / 0.3)' : '2px solid rgb(59 130 246 / 0.8)',
@@ -139,7 +139,7 @@ export default function Calculator() {
               </div>
 
               {/* Distance Section */}
-              <div className="flex flex-col items-center" style={{
+              <div className="flex flex-col items-center w-full" style={{
                 padding: '24px',
                 border: isCalculatedField('distance') ? 'none' : '2px dashed rgb(59 130 246 / 0.3)',
                 borderRadius: '16px',
@@ -187,7 +187,7 @@ export default function Calculator() {
               </div>
 
               {/* Time Section */}
-              <div className="flex flex-col items-center" style={{
+              <div className="flex flex-col items-center w-full" style={{
                 padding: '24px',
                 border: isCalculatedField('time') ? 'none' : '2px dashed rgb(59 130 246 / 0.3)',
                 borderRadius: '16px',
@@ -208,7 +208,7 @@ export default function Calculator() {
                     Time
                   </label>
                 </div>
-                <div className="flex w-full">
+                <div className="flex w-full gap-2 min-w-0">
                   <input
                     type="number"
                     placeholder="h"
@@ -218,7 +218,7 @@ export default function Calculator() {
                     disabled={isCalculatedField('time')}
                     style={{
                       flex: '1',
-                      minWidth: '0',
+                      minWidth: '50px',
                       height: '40px',
                       padding: '6px 8px',
                       border: isCalculatedField('time') ? '1px solid rgb(82 82 91 / 0.5)' : '2px solid rgb(59 130 246 / 0.8)',
